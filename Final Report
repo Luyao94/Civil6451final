@@ -1,0 +1,72 @@
+
+CIVILEN 6451
+
+
+Final Report
+
+
+Mao Li
+ECE Department
+li.6794@osu.edu
+
+•	Step progress and results:
+1.	Due the clarification in “readme.txt” file that all the images have removed distortion and rectified, the experiment will operate directly the image data. 
+2.	Interest points extraction and matching between stereo images
+Code: 
+[fRANSAC,inliers ]= estimateFundamentalMatrix(pm_0_s3,...
+    	       pm_1_s3,'Method','RANSAC',...
+                    'NumTrials',500,'DistanceThreshold',1);
+
+                    [fRANSAC_next,inliers_next ]= estimateFundamentalMatrix(pm_0_next_s3,...
+                    pm_1_next_s3 ,'Method','RANSAC',...
+                    'NumTrials',500,'DistanceThreshold',1);
+
+                    [~,inliers_between ]= estimateFundamentalMatrix(pm_0_s3,...
+                    pm_0_next_s3 ,'Method','RANSAC',...
+                     'NumTrials',500,'DistanceThreshold',1);
+
+                   
+Fig1. Matched points in frame of time t
+
+ 
+Fig.2 Matched points in frame of time t+1
+
+ 
+Fig.3 Matched points in left frame of time t and t+1
+3.	Use overlapping points generated from the above step to get 3-D coordinates
+Code;
+worldPoints = triangulate(match_0_3w,match_1_3w,K_0',K_1');
+worldPoints_next = triangulate(match_0_next_3w,match_1_next_3w,K_0',K_1');
+
+4.	Path generated using partial dataset
+The approach I am using to generate the path is to generate the difference between neighbor frames corresponding 3-d points. The move of camera center should have the inverse direction of this shift. Consider we are generating a map path here, so we can just focus on the Z and X coordinates. 
+
+
+
+
+
+
+Time stamp: 1~300
+
+     Fig.4 generated path                                   	    Fig.5 ground true path
+Despite the ratio between the two path. It look similar. While when I apply to the whole dataset it looks like:
+                                                                              
+    Fig.6 Test path /00/				        Fig.7 True path /00/
+Upcoming: eliminating the error generated in the process and correct the path. 
+Core code:
+Loop :
+coor_inc = pinv(R)*vec;
+coor = coor+coor_inc;
+watch = [watch coor]; 
+theta = acos(dot(vec,[1 0])/norm(vec))-pi/2;
+R_temp = [cos(theta) -sin(theta);sin(theta) cos(theta)];
+R = R_temp*R;
+Update: 
+Use median of 3-d point set difference instead of mean.
+
+Fig.8 Test Path time 1:1000                                 Fig.9 Ture path time 1:1000
+                                                                                                                                                                 
+                   
+ Fig.9 Test Path /00/                                 Fig.10 Ture path /00/
+                                                            
+The error analysis is an interesting topic to look into more deep. The outcome still look no good enough.  
